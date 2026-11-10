@@ -55,6 +55,14 @@ def _walk_strings(value: Any, path: str) -> Iterable[tuple[str, str]]:
             yield from _walk_strings(v, f"{path}[{i}]")
 
 
+_EXPRESSION_REF = re.compile(r"\{\{.*?\}\}", re.DOTALL)
+
+
+def _strip_expression_refs(text: str) -> str:
+    """Blank out closed ``{{ ... }}`` spans; an unclosed ``{{`` is left as-is (checked conservatively)."""
+    return _EXPRESSION_REF.sub(" ", text)
+
+
 def _find_secrets(text: str) -> list[str]:
     found = []
     for pattern in _SECRET_PATTERNS:
@@ -93,8 +101,8 @@ def check_text(text: str, source: str, allow: Iterable[str] = ()) -> list[Proble
         if "secret-suspect" not in allowed:
             for node in wf.get("nodes", []):
                 for path, value in _walk_strings(node.get("parameters", {}), "parameters"):
-                    if value.startswith("="):  # n8n expression, not a literal value
-                        continue
+                    if value.startswith("="):  # n8n expression: check only the text outside {{ ... }}
+                        value = _strip_expression_refs(value[1:])
                     for masked in _find_secrets(value):
                         problems.append(Problem(source, str(node.get("name", "")), path, "secret-suspect",
                                                 f"looks like a token: {masked}"))

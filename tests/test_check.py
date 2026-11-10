@@ -64,3 +64,55 @@ def test_mask_and_unknown_kind():
     assert mask("abcdefghijkl") == "abcd****"
     with pytest.raises(ValueError):
         check_text((FIXTURES / "export-v1.json").read_text(encoding="utf-8"), "x", ["nope"])
+
+
+def _write_with_params(tmp_path, header_value, json_body):
+    import json
+    from n8n_tidy import dumps, normalize
+
+    wf = json.loads((FIXTURES / "export-v1.json").read_text(encoding="utf-8"))
+    http = next(n for n in wf["nodes"] if n["name"] == "Notify Team")
+    http["parameters"]["headerParameters"] = {"parameters": [{"name": "Authorization", "value": header_value}]}
+    http["parameters"]["jsonBody"] = json_body
+    target = tmp_path / "expr.json"
+    target.write_text(dumps(normalize(wf)), encoding="utf-8")
+    return target
+
+
+def test_token_literal_inside_expression_is_reported(tmp_path, capsys):
+    token = fake_token()
+    target = _write_with_params(
+        tmp_path,
+        "=Bearer " + token + " {{ $json.id }}",
+        '={"key": "' + token + '", "id": "{{ $json.id }}"}',
+    )
+    code = main(["check", str(target)])
+    out = capsys.readouterr().out
+    assert code == 1
+    assert "Notify Team > parameters.headerParameters.parameters[0].value: secret-suspect" in out
+    assert "Notify Team > parameters.jsonBody: secret-suspect" in out
+    assert token not in out and token[:12] not in out
+
+
+@pytest.mark.parametrize(
+    "value, reported",
+    [
+        ("={{ $env.TOKEN }}", False),
+        ('={"id": "{{ $json.id }}"}', False),
+        ("={{ 'Bearer ' + $env.TOKEN_FAKE_VALUE_PLACEHOLDER }}", False),
+        ("=Bearer {{ $env.TOKEN_FAKE_VALUE_PLACEHOLDER }}", False),
+        ("={{ '" + fake_token() + "' }}", False),  # token only inside {{ }}: unchanged behaviour
+        ("=prefix " + fake_token(), True),
+        ("={{ $json.a }} " + fake_token() + " {{ $json.b }}", True),
+        ("={{ $json.a " + fake_token(), True),  # unclosed '{{': checked as-is (conservative)
+        ("plain " + fake_token(), True),
+        ("plain text with no secret", False),
+    ],
+)
+def test_expression_token_table(tmp_path, capsys, value, reported):
+    target = _write_with_params(tmp_path, value, "plain")
+    code = main(["check", str(target)])
+    out = capsys.readouterr().out
+    assert (code == 1) is reported
+    assert ("secret-suspect" in out) is reported
+    assert fake_token() not in out

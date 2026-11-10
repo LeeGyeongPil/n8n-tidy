@@ -7,5 +7,5 @@ from .diff import Change, semantic_diff
 from .io import NotAWorkflowError
 from .normalize import dumps, normalize
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __all__ = ["normalize", "dumps", "semantic_diff", "Change", "NotAWorkflowError", "__version__"]
