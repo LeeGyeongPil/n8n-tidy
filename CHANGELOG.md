@@ -5,6 +5,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-11
+
+### Fixed
+- `check`: a value such as `Bearer sk-...` that matched two token patterns is now reported once instead of twice.
+
+### Known limitations
+- If the same token appears twice in one value without overlapping, the same finding line is printed twice.
+
 ## [0.1.1] - 2026-11-11
 
 ### Fixed

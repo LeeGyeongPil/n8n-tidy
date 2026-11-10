@@ -26,12 +26,12 @@ uv tool install git+https://github.com/LeeGyeongPil/n8n-tidy
 n8n-tidy --version
 ```
 ```
-n8n-tidy 0.1.1
+n8n-tidy 0.1.2
 ```
 소스에서 바로 써 보려면 `git clone` 후 폴더 안에서 `uv run n8n-tidy ...` 를 실행합니다. (PyPI 에는 아직 올리지 않았습니다.)
 
 ## 빠르게 시작하기
-설치 없이 한 번만 실행하려면 `uvx` 를 씁니다(공개 후 사용 가능. 같은 방식을 소스 폴더에서 `uvx --from . n8n-tidy --version` 으로 실행해 `n8n-tidy 0.1.1` 을 확인했습니다).
+설치 없이 한 번만 실행하려면 `uvx` 를 씁니다(공개 후 사용 가능. 같은 방식을 소스 폴더에서 `uvx --from . n8n-tidy --version` 으로 실행해 `n8n-tidy 0.1.2` 을 확인했습니다).
 ```bash
 uvx --from git+https://github.com/LeeGyeongPil/n8n-tidy n8n-tidy diff A.json B.json
 ```
@@ -132,7 +132,7 @@ n8n-tidy diff --format md examples/export-before.json examples/export-after.json
 ```yaml
 repos:
   - repo: https://github.com/LeeGyeongPil/n8n-tidy
-    rev: v0.1.1
+    rev: v0.1.2
     hooks:
       - id: n8n-tidy-check
 ```
