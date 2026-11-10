@@ -1,0 +1,196 @@
+[
+  {
+    "updatedAt": "2026-02-01T08:00:00.000Z",
+    "createdAt": "2026-01-05T09:00:00.000Z",
+    "id": "tidyArr0001",
+    "name": "Status check A",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 6
+              }
+            ]
+          }
+        },
+        "id": "tidyArr0001-trigger",
+        "name": "Every 6 Hours",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "url": "https://example.com/status/a",
+          "options": {}
+        },
+        "id": "tidyArr0001-http",
+        "name": "Fetch Status",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          240,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Every 6 Hours": {
+        "main": [
+          [
+            {
+              "node": "Fetch Status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "meta": {
+      "instanceId": "0000000000000000000000000000000000000000000000000000000000fake01"
+    },
+    "nodeGroups": [],
+    "pinData": {},
+    "versionId": "44444444-4444-4444-8444-111111111111",
+    "activeVersionId": null,
+    "versionCounter": 1,
+    "triggerCount": 0,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-01-05T09:00:00.100Z",
+        "createdAt": "2026-01-05T09:00:00.100Z",
+        "role": "workflow:owner",
+        "workflowId": "tidyArr0001",
+        "projectId": "FakeProject000001",
+        "project": {
+          "updatedAt": "2026-01-01T00:00:00.000Z",
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "id": "FakeProject000001",
+          "name": "Unnamed Project",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "customTelemetryTags": [],
+          "creatorId": "00000000-0000-4000-8000-000000000001"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  },
+  {
+    "updatedAt": "2026-02-01T08:00:00.000Z",
+    "createdAt": "2026-01-05T09:00:00.000Z",
+    "id": "tidyArr0002",
+    "name": "Status check B",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 6
+              }
+            ]
+          }
+        },
+        "id": "tidyArr0002-trigger",
+        "name": "Every 6 Hours",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "url": "https://example.com/status/b",
+          "options": {}
+        },
+        "id": "tidyArr0002-http",
+        "name": "Fetch Status",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          240,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Every 6 Hours": {
+        "main": [
+          [
+            {
+              "node": "Fetch Status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    },
+    "staticData": null,
+    "meta": {
+      "instanceId": "0000000000000000000000000000000000000000000000000000000000fake01"
+    },
+    "nodeGroups": [],
+    "pinData": {},
+    "versionId": "44444444-4444-4444-8444-222222222222",
+    "activeVersionId": null,
+    "versionCounter": 1,
+    "triggerCount": 0,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-01-05T09:00:00.100Z",
+        "createdAt": "2026-01-05T09:00:00.100Z",
+        "role": "workflow:owner",
+        "workflowId": "tidyArr0002",
+        "projectId": "FakeProject000001",
+        "project": {
+          "updatedAt": "2026-01-01T00:00:00.000Z",
+          "createdAt": "2026-01-01T00:00:00.000Z",
+          "id": "FakeProject000001",
+          "name": "Unnamed Project",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "customTelemetryTags": [],
+          "creatorId": "00000000-0000-4000-8000-000000000001"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]
