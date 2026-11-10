@@ -1,0 +1,13 @@
+- id: n8n-tidy-check
+  name: n8n-tidy check
+  description: Fail on pinData, un-normalized exports, instance info and token-like strings in n8n workflow JSON.
+  entry: n8n-tidy check
+  language: python
+  types: [json]
+
+- id: n8n-tidy-normalize
+  name: n8n-tidy normalize
+  description: Rewrite n8n workflow JSON into a stable form (non-workflow JSON is skipped).
+  entry: n8n-tidy normalize
+  language: python
+  types: [json]
