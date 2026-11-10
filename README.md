@@ -98,7 +98,7 @@ examples/export-after.json: - > meta.instanceId: instance-info (id of the source
 ![check 실행 화면](docs/images/03-check.png)
 *네 가지 문제와 종료 코드 1.*
 
-`secret-suspect`(토큰처럼 보이는 문자열) 검사는 정규식으로 짐작하는 방식이라 전문 비밀 스캐너를 대신하지 못합니다. `=` 로 시작하는 표현식 값은 닫힌 `{{ ... }}` 구간을 뺀 나머지를 검사하고, 닫히지 않은 `{{` 는 그대로 검사합니다.
+`secret-suspect`(토큰처럼 보이는 문자열) 검사는 정규식으로 짐작하는 방식이라 전문 비밀 스캐너를 대신하지 못합니다. `=` 로 시작하는 표현식 값은 닫힌 `{{ ... }}` 구간을 뺀 나머지를 검사하고, 닫히지 않은 `{{` 는 그대로 검사합니다. 같은 토큰이 여러 패턴에 걸려도 한 번만 보고합니다(`Bearer sk-...` 같은 값도 1건).
 
 ### 시나리오 2 — 바로 전 커밋과 비교하기
 ```bash
@@ -243,7 +243,7 @@ flowchart LR
 ```bash
 uv run pytest -q
 ```
-테스트 44개가 n8n·docker·네트워크 없이 돕니다. 버그·제안은 이슈로 남겨 주세요. 변경 기록은 [CHANGELOG.md](CHANGELOG.md).
+테스트 55개가 n8n·docker·네트워크 없이 돕니다. 버그·제안은 이슈로 남겨 주세요. 변경 기록은 [CHANGELOG.md](CHANGELOG.md).
 
 ## 라이선스
 MIT. n8n 은 별도 라이선스(Sustainable Use License)이며 이 도구는 n8n 코드를 쓰지 않고 내보낸 JSON 만 다룹니다. 예제 JSON 은 직접 작성했습니다.
