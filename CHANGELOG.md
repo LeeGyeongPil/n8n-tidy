@@ -5,6 +5,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-11
+
+### Fixed
+- `check`: `secret-suspect` now also detects tokens written in an expression value (`=...`) outside closed `{{ ... }}` parts, and after an unclosed `{{`. Previously every value starting with `=` was skipped.
+
+### Known limitations
+- A value that matches two patterns (for example `Bearer sk-...`) is reported twice at the same path with the same mask (since 0.1.0).
+- A token split by `{{ }}` is not a literal token and is not detected.
+
 ## [0.1.0] - 2026-11-10
 
 ### Added
