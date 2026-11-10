@@ -46,6 +46,8 @@ def build_parser() -> argparse.ArgumentParser:
     c.add_argument("paths", nargs="+", metavar="PATH")
     c.add_argument("--allow", action="append", default=[], choices=KINDS, metavar="KIND",
                    help=f"ignore a kind (repeatable): {', '.join(KINDS)}")
+    c.add_argument("--keep-static-data", action="store_true",
+                   help="expect staticData to be kept (matches `normalize --keep-static-data`)")
 
     i = sub.add_parser("install-git", help="register the diff driver in this repository's local git config")
     i.add_argument("--pattern", default="*.json", help="gitattributes pattern (default: *.json)")
@@ -163,7 +165,7 @@ def _cmd_check(args: argparse.Namespace) -> int:
     for path in iter_json_files(args.paths):
         try:
             text = path.read_text(encoding="utf-8")
-            problems += check_text(text, str(path), args.allow)
+            problems += check_text(text, str(path), args.allow, keep_static_data=args.keep_static_data)
         except (NotAWorkflowError, InvalidJSONError) as exc:
             _skip(path, exc)
         except UnicodeDecodeError:

@@ -78,8 +78,12 @@ def _find_secrets(text: str) -> list[str]:
     return found
 
 
-def check_text(text: str, source: str, allow: Iterable[str] = ()) -> list[Problem]:
-    """Check one file's text. ``allow`` lists kinds to ignore (see :data:`KINDS`)."""
+def check_text(text: str, source: str, allow: Iterable[str] = (), *,
+               keep_static_data: bool = False) -> list[Problem]:
+    """Check one file's text. ``allow`` lists kinds to ignore (see :data:`KINDS`).
+
+    ``keep_static_data`` compares against the output of ``normalize --keep-static-data``.
+    """
     allowed = set(allow)
     unknown = allowed - set(KINDS)
     if unknown:
@@ -89,7 +93,7 @@ def check_text(text: str, source: str, allow: Iterable[str] = ()) -> list[Proble
 
     if "not-normalized" not in allowed:
         keep_pin = "pin-data" in allowed
-        normalized = [normalize(w, keep_pin_data=keep_pin) for w in workflows]
+        normalized = [normalize(w, keep_pin_data=keep_pin, keep_static_data=keep_static_data) for w in workflows]
         expected = dumps(normalized if is_array else normalized[0])
         if expected != text:
             problems.append(Problem(source, "", "", "not-normalized", "run `n8n-tidy normalize`"))

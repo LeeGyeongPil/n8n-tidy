@@ -108,3 +108,46 @@ def test_normalize_skips_non_utf8_like_check(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "skipped" in out and "not UTF-8" in out
     assert (tmp_path / "bin.json").read_bytes() == b"\xff\xfe"
+
+
+# --- check --keep-static-data (staticData kept by normalize must pass check) ---
+
+def _static_file(tmp_path, static):
+    data = json.loads((FIXTURES / "export-v1.json").read_text(encoding="utf-8"))
+    data["staticData"] = static
+    path = tmp_path / "s.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    return path
+
+
+def test_check_keep_static_data_passes_after_normalize_keep(tmp_path, capsys):
+    path = _static_file(tmp_path, {"node:Ticket Webhook": {"lastId": 5}})
+    assert main(["normalize", "--keep-static-data", str(path)]) == 0
+    capsys.readouterr()
+    assert main(["check", "--keep-static-data", str(path)]) == 0
+    assert "ok: no problems found." in capsys.readouterr().out
+    assert "staticData" in path.read_text(encoding="utf-8")  # positive: value kept
+
+
+def test_check_without_flag_still_reports_static_data(tmp_path, capsys):
+    path = _static_file(tmp_path, {"node:Ticket Webhook": {"lastId": 5}})
+    main(["normalize", "--keep-static-data", str(path)])
+    capsys.readouterr()
+    assert main(["check", str(path)]) == 1  # unchanged behaviour
+    out = capsys.readouterr().out
+    assert out.count("not-normalized") == 1 and "1 problem(s) found." in out
+
+
+def test_check_plain_file_passes_with_and_without_flag(tmp_path, capsys):
+    path = tmp_path / "p.json"
+    copy_fixture("export-v1.json", path)
+    main(["normalize", str(path)])
+    capsys.readouterr()
+    assert main(["check", str(path)]) == 0
+    assert main(["check", "--keep-static-data", str(path)]) == 0
+
+
+def test_check_keep_static_data_empty_static_data_still_flagged(tmp_path, capsys):
+    path = _static_file(tmp_path, {})
+    assert main(["check", "--keep-static-data", str(path), "--allow", "pin-data"]) == 1
+    assert "not-normalized" in capsys.readouterr().out

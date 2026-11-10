@@ -177,3 +177,14 @@ def test_distinct_tokens_in_one_value_are_each_reported(tmp_path):
     toks = _other_tokens()
     assert len(_secret_problems(tmp_path, fake_token() + " " + toks["gh"])) == 2
     assert len(_secret_problems(tmp_path, "Bearer " + fake_token() + " " + toks["aws"])) == 2
+
+
+def test_check_text_keep_static_data():
+    import json as _json
+    from n8n_tidy.normalize import dumps, normalize
+
+    wf = _json.loads((FIXTURES / "export-v1.json").read_text(encoding="utf-8"))
+    wf["staticData"] = {"node:Ticket Webhook": {"lastId": 5}}
+    text = dumps(normalize(wf, keep_static_data=True))
+    assert check_text(text, "s.json", keep_static_data=True) == []
+    assert [p.kind for p in check_text(text, "s.json")] == ["not-normalized"]
