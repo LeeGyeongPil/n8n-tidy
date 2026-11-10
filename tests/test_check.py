@@ -7,7 +7,8 @@ from n8n_tidy.check import check_text, mask
 
 def fake_token() -> str:
     # Assembled at run time so no token-shaped string is ever committed.
-    return "sk" + "-" + "Abcdefghij0123456789" + "KLMNOP"
+    # "".join over a list is a runtime call, so the .pyc holds no folded token constant.
+    return "".join(["sk", "-", "Abcdefghij0123456789", "KLMNOP"])
 
 
 def test_v2_reports_three_kinds(capsys):
@@ -116,3 +117,63 @@ def test_expression_token_table(tmp_path, capsys, value, reported):
     assert (code == 1) is reported
     assert ("secret-suspect" in out) is reported
     assert fake_token() not in out
+
+
+def _join(*parts: str) -> str:
+    # Runtime call: the interpreter cannot constant-fold it, so no token-shaped
+    # string lands in the compiled .pyc either.
+    return "".join(parts)
+
+
+def _other_tokens() -> dict[str, str]:
+    return {
+        "bearer_plain": _join("Bearer ", "abcdefghijklmnop", "qrstuvwxyz012345"),
+        "gh": _join("gh", "p_", "A1b2C3d4E5f6G7h8", "I9j0K1l2M3n4O5p6Q7r8"),
+        "xox": _join("xox", "b-", "1234567890", "-abcdefghij"),
+        "aws": _join("AK", "IA", "ABCDEFGH", "IJKLMNOP"),
+    }
+
+
+def _secret_problems(tmp_path, value):
+    target = _write_with_params(tmp_path, value, "plain")
+    return [p for p in check_text(target.read_text(encoding="utf-8"), "t.json") if p.kind == "secret-suspect"]
+
+
+def test_bearer_with_sk_token_is_reported_once(tmp_path, capsys):
+    # Regression: the sk- pattern and the Bearer pattern used to both report the same token.
+    target = _write_with_params(tmp_path, "Bearer " + fake_token(), "plain")
+    code = main(["check", str(target)])
+    out = capsys.readouterr().out
+    assert code == 1
+    lines = [l for l in out.splitlines() if "secret-suspect" in l]
+    assert len(lines) == 1
+    assert out.strip().splitlines()[-1].startswith("1 problem")
+    assert fake_token() not in out
+
+
+@pytest.mark.parametrize("prefix", ["Bearer ", "Bearer  ", "=Bearer "])
+def test_bearer_prefixed_token_counts_once(tmp_path, prefix):
+    assert len(_secret_problems(tmp_path, prefix + fake_token())) == 1
+
+
+@pytest.mark.parametrize("name", ["bearer_plain", "gh", "xox", "aws"])
+def test_other_tokens_still_detected_once(tmp_path, name):
+    token = _other_tokens()[name]
+    probs = _secret_problems(tmp_path, token)
+    assert len(probs) == 1
+    assert token not in probs[0].format()
+    assert probs[0].detail.endswith(mask(token.split()[-1]))
+
+
+def test_bearer_with_gh_token_is_reported_once(tmp_path):
+    assert len(_secret_problems(tmp_path, "Bearer " + _other_tokens()["gh"])) == 1
+
+
+def test_bare_sk_token_still_detected_once(tmp_path):
+    assert len(_secret_problems(tmp_path, fake_token())) == 1
+
+
+def test_distinct_tokens_in_one_value_are_each_reported(tmp_path):
+    toks = _other_tokens()
+    assert len(_secret_problems(tmp_path, fake_token() + " " + toks["gh"])) == 2
+    assert len(_secret_problems(tmp_path, "Bearer " + fake_token() + " " + toks["aws"])) == 2

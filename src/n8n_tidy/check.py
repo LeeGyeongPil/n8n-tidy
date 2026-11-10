@@ -64,10 +64,17 @@ def _strip_expression_refs(text: str) -> str:
 
 
 def _find_secrets(text: str) -> list[str]:
+    """Return masked tokens; a span already reported by an earlier pattern is not reported again."""
     found = []
+    seen: list[tuple[int, int]] = []
     for pattern in _SECRET_PATTERNS:
+        group = 1 if pattern.groups else 0
         for m in pattern.finditer(text):
-            found.append(mask(m.group(1) if pattern.groups else m.group(0)))
+            start, end = m.span(group)
+            if any(start < e and s < end for s, e in seen):
+                continue
+            seen.append((start, end))
+            found.append(mask(m.group(group)))
     return found
 
 
