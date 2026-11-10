@@ -26,12 +26,12 @@ uv tool install git+https://github.com/LeeGyeongPil/n8n-tidy
 n8n-tidy --version
 ```
 ```
-n8n-tidy 0.1.0
+n8n-tidy 0.1.1
 ```
 소스에서 바로 써 보려면 `git clone` 후 폴더 안에서 `uv run n8n-tidy ...` 를 실행합니다. (PyPI 에는 아직 올리지 않았습니다.)
 
 ## 빠르게 시작하기
-설치 없이 한 번만 실행하려면 `uvx` 를 씁니다(공개 후 사용 가능. 같은 방식을 소스 폴더에서 `uvx --from . n8n-tidy --version` 으로 실행해 `n8n-tidy 0.1.0` 을 확인했습니다).
+설치 없이 한 번만 실행하려면 `uvx` 를 씁니다(공개 후 사용 가능. 같은 방식을 소스 폴더에서 `uvx --from . n8n-tidy --version` 으로 실행해 `n8n-tidy 0.1.1` 을 확인했습니다).
 ```bash
 uvx --from git+https://github.com/LeeGyeongPil/n8n-tidy n8n-tidy diff A.json B.json
 ```
@@ -98,7 +98,7 @@ examples/export-after.json: - > meta.instanceId: instance-info (id of the source
 ![check 실행 화면](docs/images/03-check.png)
 *네 가지 문제와 종료 코드 1.*
 
-`secret-suspect`(토큰처럼 보이는 문자열) 검사는 정규식으로 짐작하는 방식이라 전문 비밀 스캐너를 대신하지 못합니다.
+`secret-suspect`(토큰처럼 보이는 문자열) 검사는 정규식으로 짐작하는 방식이라 전문 비밀 스캐너를 대신하지 못합니다. `=` 로 시작하는 표현식 값은 닫힌 `{{ ... }}` 구간을 뺀 나머지를 검사하고, 닫히지 않은 `{{` 는 그대로 검사합니다.
 
 ### 시나리오 2 — 바로 전 커밋과 비교하기
 ```bash
@@ -132,7 +132,7 @@ n8n-tidy diff --format md examples/export-before.json examples/export-after.json
 ```yaml
 repos:
   - repo: https://github.com/LeeGyeongPil/n8n-tidy
-    rev: v0.1.0
+    rev: v0.1.1
     hooks:
       - id: n8n-tidy-check
 ```
@@ -237,12 +237,13 @@ flowchart LR
 | 노드를 삭제했더니 `[i]` 경로 변경이 여러 건 | 배열 항목이 밀려서 인덱스가 바뀜 | 알려진 한계 |
 | `diff --rev` 가 실패 | git 저장소 밖이거나 리비전에 파일이 없음 | 저장소 안에서, 파일 경로를 확인 |
 | `--exit-code` 없이 CI 가 통과 | `diff` 는 기본적으로 변경이 있어도 종료 코드 0 | `--exit-code` 를 추가 |
+| 표현식(`=...`) 안에 적은 토큰이 `secret-suspect` 로 보고됨 | `{{ }}` 바깥(또는 닫히지 않은 `{{` 뒤)의 문자열도 검사 대상 | 토큰을 지우고 자격 증명(credentials)을 쓰거나 `--allow secret-suspect` |
 
 ## 개발·기여
 ```bash
 uv run pytest -q
 ```
-테스트 33개가 n8n·docker·네트워크 없이 돕니다. 버그·제안은 이슈로 남겨 주세요. 변경 기록은 [CHANGELOG.md](CHANGELOG.md).
+테스트 44개가 n8n·docker·네트워크 없이 돕니다. 버그·제안은 이슈로 남겨 주세요. 변경 기록은 [CHANGELOG.md](CHANGELOG.md).
 
 ## 라이선스
 MIT. n8n 은 별도 라이선스(Sustainable Use License)이며 이 도구는 n8n 코드를 쓰지 않고 내보낸 JSON 만 다룹니다. 예제 JSON 은 직접 작성했습니다.
