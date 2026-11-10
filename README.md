@@ -26,12 +26,12 @@ uv tool install git+https://github.com/LeeGyeongPil/n8n-tidy
 n8n-tidy --version
 ```
 ```
-n8n-tidy 0.1.2
+n8n-tidy 0.1.3
 ```
 소스에서 바로 써 보려면 `git clone` 후 폴더 안에서 `uv run n8n-tidy ...` 를 실행합니다. (PyPI 에는 아직 올리지 않았습니다.)
 
 ## 빠르게 시작하기
-설치 없이 한 번만 실행하려면 `uvx` 를 씁니다(공개 후 사용 가능. 같은 방식을 소스 폴더에서 `uvx --from . n8n-tidy --version` 으로 실행해 `n8n-tidy 0.1.2` 을 확인했습니다).
+설치 없이 한 번만 실행하려면 `uvx` 를 씁니다(공개 후 사용 가능. 같은 방식을 소스 폴더에서 `uvx --from . n8n-tidy --version` 으로 실행해 `n8n-tidy 0.1.3` 을 확인했습니다).
 ```bash
 uvx --from git+https://github.com/LeeGyeongPil/n8n-tidy n8n-tidy diff A.json B.json
 ```
@@ -79,6 +79,7 @@ n8n-tidy diff: examples/export-before.json -> examples/export-after.json
 | `show FILE` | 노드별 블록으로 보는 검토용 보기 | `n8n-tidy show flow.json` |
 | `check PATH...` | `pinData`, 정리 안 됨, 인스턴스 정보, 토큰 의심 문자열 검사 | `n8n-tidy check backups/` |
 | `check --allow KIND` | 해당 종류를 무시(반복 가능) | `--allow instance-info` |
+| `check --keep-static-data` | `normalize --keep-static-data` 로 남긴 `staticData` 를 정상으로 간주(두 명령에 같은 옵션을 짝으로 씁니다) | `n8n-tidy check --keep-static-data backups/` |
 | `install-git [--dry-run]` | 이 저장소의 git diff 드라이버 등록 | `n8n-tidy install-git` |
 | `uninstall-git` | `install-git` 이 쓴 것을 제거 | |
 
@@ -132,11 +133,11 @@ n8n-tidy diff --format md examples/export-before.json examples/export-after.json
 ```yaml
 repos:
   - repo: https://github.com/LeeGyeongPil/n8n-tidy
-    rev: v0.1.2
+    rev: v0.1.3
     hooks:
       - id: n8n-tidy-check
 ```
-`n8n-tidy-normalize` 훅은 파일을 직접 고쳐 씁니다.
+`n8n-tidy-normalize` 훅은 파일을 직접 고쳐 씁니다. normalize 훅에 `args: [--keep-static-data]` 를 주면 check 훅에도 같은 args 를 줍니다.
 
 ### GitHub Actions 에 끼우기
 PR 에서 검사하고, 변경 요약을 Actions 요약 화면에 남기는 예입니다. `fetch-depth: 0` 이 없으면 `origin/main` 같은 리비전을 찾지 못합니다. 코멘트로 게시하는 일은 이 도구가 하지 않으니 필요하면 직접 이어 붙이세요.
@@ -168,7 +169,7 @@ jobs:
 | `meta.instanceId` | 항상 삭제(`meta` 가 비면 `meta` 도 삭제) | 원본 인스턴스 식별자 | |
 | `description`, `nodeGroups`, `sourceWorkflowId` | 비어 있을 때만 삭제 | 새 n8n 이 추가한 필드라 옛 내보내기와 맞추기 위함 | |
 | `pinData` | 기본 삭제 | 고정 테스트 데이터에 개인정보가 섞일 수 있음 | `--keep-pin-data` |
-| `staticData` | 기본 삭제 | 실행 중 쌓이는 상태 값 | `--keep-static-data` |
+| `staticData` | 기본 삭제 | 실행 중 쌓이는 상태 값 | `--keep-static-data` (`check` 에도 같은 옵션) |
 | `tags[].createdAt`, `tags[].updatedAt` | 삭제 | 휘발 시각 | |
 | `nodes`, `tags` 의 순서 | 이름순으로 정렬 | 순서만 바뀐 변경을 없앰 | |
 
@@ -243,7 +244,7 @@ flowchart LR
 ```bash
 uv run pytest -q
 ```
-테스트 55개가 n8n·docker·네트워크 없이 돕니다. 버그·제안은 이슈로 남겨 주세요. 변경 기록은 [CHANGELOG.md](CHANGELOG.md).
+테스트 60개가 n8n·docker·네트워크 없이 돕니다. 버그·제안은 이슈로 남겨 주세요. 변경 기록은 [CHANGELOG.md](CHANGELOG.md).
 
 ## 라이선스
 MIT. n8n 은 별도 라이선스(Sustainable Use License)이며 이 도구는 n8n 코드를 쓰지 않고 내보낸 JSON 만 다룹니다. 예제 JSON 은 직접 작성했습니다.

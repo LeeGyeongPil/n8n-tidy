@@ -5,6 +5,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-11-11
+
+### Fixed
+- `check`: added `--keep-static-data`, the counterpart of `normalize --keep-static-data`. Without it, `check` reported `not-normalized` for a file that `normalize --keep-static-data` had just written.
+
+### Known limitations
+- If the same token appears twice in one value without overlapping, the same finding line is printed twice.
+- The test for an empty `staticData` with `--keep-static-data` does not isolate the cause of the failing exit code.
+- Running the test suite after normalizing `examples/export-after.json` in place makes one example-based test fail (restore the file first).
+- A token split by `{{ }}` is not a literal token and is not detected.
+
 ## [0.1.2] - 2026-11-11
 
 ### Fixed
