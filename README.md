@@ -1,5 +1,7 @@
 # n8n-tidy
 
+**한국어** | [English](README.en.md)
+
 > **English summary** — `n8n-tidy` normalizes exported n8n workflow JSON, shows a semantic diff (renamed nodes, moved nodes, line-by-line AI prompt changes) and checks files before commit, without an n8n instance. It is for people who keep workflow exports in git. Install: `uv tool install git+https://github.com/LeeGyeongPil/n8n-tidy`, then `n8n-tidy diff A.json B.json`.
 
 n8n 워크플로 JSON 을 git 에 넣을 때 생기는 잡음(저장할 때마다 바뀌는 `versionId`·`updatedAt`, 인스턴스 정보, 고정 테스트 데이터)과 "프롬프트 한 줄 바꿨는데 줄 전체가 바뀐" diff 를 정리해 주는 작은 명령줄 도구입니다. n8n 서버도 네트워크도 필요 없고, 런타임 의존성이 없습니다(Python 표준 라이브러리만 사용).
