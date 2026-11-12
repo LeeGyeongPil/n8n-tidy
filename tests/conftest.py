@@ -43,3 +43,11 @@ def isolated_git(tmp_path, monkeypatch):
 def copy_fixture(name: str, dest: Path) -> Path:
     shutil.copyfile(FIXTURES / name, dest)
     return dest
+
+
+@pytest.fixture(autouse=True)
+def _english_by_default(monkeypatch):
+    """Pin the output language so the host environment cannot change message wording."""
+    monkeypatch.setenv("N8N_TIDY_LANG", "en")
+    for name in ("LC_ALL", "LC_MESSAGES", "LANG"):
+        monkeypatch.delenv(name, raising=False)

@@ -23,24 +23,32 @@ def _git(args: list[str], cwd: Path, *, check: bool = True) -> subprocess.Comple
         proc = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True,
                               encoding="utf-8", timeout=_TIMEOUT)
     except FileNotFoundError as exc:
-        raise GitError("git was not found on PATH. Install git first.") from exc
+        raise GitError("git was not found on PATH. Install git first.", code="git_missing") from exc
     except subprocess.TimeoutExpired as exc:
-        raise GitError(f"git {' '.join(args)} timed out after {_TIMEOUT}s.") from exc
+        raise GitError(
+            f"git {' '.join(args)} timed out after {_TIMEOUT}s.",
+            code="git_timeout", params={"args": " ".join(args), "seconds": _TIMEOUT},
+        ) from exc
     if check and proc.returncode != 0:
-        raise GitError(f"git {' '.join(args)} failed: {proc.stderr.strip() or proc.stdout.strip()}")
+        detail = proc.stderr.strip() or proc.stdout.strip()
+        raise GitError(
+            f"git {' '.join(args)} failed: {detail}",
+            code="git_failed", params={"args": " ".join(args), "detail": detail},
+        )
     return proc
 
 
 def show_revision(rev: str, path: str | Path) -> str:
     """Return the content of ``path`` (relative to the cwd) at ``rev``."""
     if rev.startswith("-"):
-        raise GitError(f"invalid revision {rev!r}: must not start with '-'.")
+        raise GitError(f"invalid revision {rev!r}: must not start with '-'.", code="bad_rev", params={"rev": repr(rev)})
     p = Path(path).resolve()
     proc = _git(["show", f"{rev}:./{p.name}"], p.parent, check=False)
     if proc.returncode != 0:
         raise GitError(
             f"cannot read {path} at {rev}: {proc.stderr.strip()}. "
-            "Check that the revision exists and the file is tracked there."
+            "Check that the revision exists and the file is tracked there.",
+            code="cannot_read_rev", params={"path": str(path), "rev": rev, "detail": proc.stderr.strip()},
         )
     return proc.stdout
 
@@ -48,7 +56,8 @@ def show_revision(rev: str, path: str | Path) -> str:
 def _toplevel(cwd: Path) -> Path:
     proc = _git(["rev-parse", "--show-toplevel"], cwd, check=False)
     if proc.returncode != 0:
-        raise GitError("not inside a git repository. Run `git init` first, then re-run install-git.")
+        raise GitError("not inside a git repository. Run `git init` first, then re-run install-git.",
+                       code="not_git_repo")
     return Path(proc.stdout.strip())
 
 
@@ -63,9 +72,10 @@ def install(cwd: Path, *, pattern: str = "*.json", command: str = "n8n-tidy", dr
     Never touches the global or system git config.
     """
     if not pattern.strip() or any(ch in pattern for ch in "\n\r"):
-        raise TidyError("--pattern must be a non-empty single-line glob such as 'workflows/**/*.json'.")
+        raise TidyError("--pattern must be a non-empty single-line glob such as 'workflows/**/*.json'.",
+                        code="bad_pattern")
     if not command.strip():
-        raise TidyError("--command must not be empty.")
+        raise TidyError("--command must not be empty.", code="empty_command")
     root = _toplevel(cwd)
     settings = [
         (f"diff.{DRIVER}.textconv", f"{command} textconv"),
