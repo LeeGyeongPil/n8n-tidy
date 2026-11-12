@@ -26,12 +26,12 @@ uv tool install git+https://github.com/LeeGyeongPil/n8n-tidy
 n8n-tidy --version
 ```
 ```
-n8n-tidy 0.1.3
+n8n-tidy 0.2.0
 ```
 To try it straight from source, run `git clone` and then `uv run n8n-tidy ...` inside the folder. (It has not been uploaded to PyPI yet.)
 
 ## Quick start
-To run it once without installing, use `uvx` (available after the repository goes public. We ran the same approach from the source folder as `uvx --from . n8n-tidy --version` and confirmed `n8n-tidy 0.1.3`).
+To run it once without installing, use `uvx` (available after the repository goes public. We ran the same approach from the source folder as `uvx --from . n8n-tidy --version` and confirmed `n8n-tidy 0.2.0`).
 ```bash
 uvx --from git+https://github.com/LeeGyeongPil/n8n-tidy n8n-tidy diff A.json B.json
 ```
@@ -133,7 +133,7 @@ Add this to `.pre-commit-config.yaml` (we have not yet run this setting ourselve
 ```yaml
 repos:
   - repo: https://github.com/LeeGyeongPil/n8n-tidy
-    rev: v0.1.3
+    rev: v0.2.0
     hooks:
       - id: n8n-tidy-check
 ```
@@ -180,7 +180,40 @@ Difference from `n8nc fmt`: `fmt` keeps only 7 top-level keys (checked 2026-11-1
 A `.json` file that is not UTF-8 is skipped without an error and reported as `skipped`.
 
 ## Settings
-There are no config files or environment variables. For default behavior, see the "Normalization rules" table above.
+There are no config files. For default behavior, see the "Normalization rules" table above. The only setting is the output language.
+
+### Output language (English / Korean)
+The CLI's own messages come in English and Korean. The language is chosen in this order, and the first one that is set wins:
+
+1. `--lang en|ko` (before or after the sub-command, for example `n8n-tidy --lang ko check backups/`)
+2. the `N8N_TIDY_LANG` environment variable
+3. `LC_ALL`, then `LC_MESSAGES`, then `LANG`
+
+A value that does not start with `ko` (for example `fr_FR.UTF-8`, or nothing set) means English. A `ko_KR.UTF-8` locale therefore gives Korean by default. Scripts that compare message text should pin the language with `N8N_TIDY_LANG=en` or `--lang en`. An invalid `--lang` value exits with code 2.
+
+```bash
+n8n-tidy --lang ko check examples/export-after.json
+```
+```
+examples/export-after.json: - > -: not-normalized (run `n8n-tidy normalize`)
+examples/export-after.json: Ticket Webhook > pinData.Ticket Webhook: pin-data (pinned test data may contain real personal data)
+examples/export-after.json: - > shared: instance-info (owner/project of the source instance)
+examples/export-after.json: - > meta.instanceId: instance-info (id of the source instance)
+문제 4건을 찾았습니다.
+```
+Only the last line is Korean. The problem lines stay in English (see below).
+
+What is translated: the help text of `-h` (description, sub-command and option help), `skipped`, `normalized`, `needs normalizing`, the `check` summary line (`N problem(s) found.` / `ok: no problems found.`), `nothing to remove`, the `(dry run)` marker of `install-git`, and error messages after `n8n-tidy: error:` (including errors raised by the library).
+
+**Printed in English as they are, in both languages:**
+- argparse's own wording: `usage:`, the `positional arguments:` and `options:` section titles, the `n8n-tidy: error:` prefix, the `-h` option line, the `--version` help, `invalid choice` errors, and the metavars (`PATH`, `REV`, `KIND`, `COMMAND`)
+- `diff` output: the `text` and `md` bodies and the `--format json` output (the JSON is byte-for-byte the same in both languages)
+- the `show` / `textconv` review view
+- the `check` problem lines (rule IDs such as `pin-data` and `not-normalized` never change)
+- the git configuration lines printed by `install-git` / `uninstall-git`
+- the workflow JSON itself
+
+The library API (`normalize`, `semantic_diff`, `render_*`, ...) is unchanged, and `str(exc)` of the library's errors is still English.
 
 ### Mock mode and real mode
 - **Practice mock mode**: this is not a mode you turn on separately. The tool only reads files, so it always behaves the same way, and the example JSON (`examples/`) is made-up values written by hand. All the commands above work this way.
@@ -244,7 +277,7 @@ If you only need normalization, n8nc's `fmt` is also enough. If you want to sync
 ```bash
 uv run pytest -q
 ```
-The 60 tests run without n8n, docker, or the network. Please leave bugs and suggestions as issues. The change log is [CHANGELOG.md](CHANGELOG.md).
+The 84 tests run without n8n, docker, or the network. Please leave bugs and suggestions as issues. The change log is [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 MIT. n8n has a separate license (Sustainable Use License), and this tool does not use n8n code; it only handles exported JSON. The example JSON was written by hand.

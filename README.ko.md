@@ -26,12 +26,12 @@ uv tool install git+https://github.com/LeeGyeongPil/n8n-tidy
 n8n-tidy --version
 ```
 ```
-n8n-tidy 0.1.3
+n8n-tidy 0.2.0
 ```
 소스에서 바로 써 보려면 `git clone` 후 폴더 안에서 `uv run n8n-tidy ...` 를 실행합니다. (PyPI 에는 아직 올리지 않았습니다.)
 
 ## 빠르게 시작하기
-설치 없이 한 번만 실행하려면 `uvx` 를 씁니다(공개 후 사용 가능. 같은 방식을 소스 폴더에서 `uvx --from . n8n-tidy --version` 으로 실행해 `n8n-tidy 0.1.3` 을 확인했습니다).
+설치 없이 한 번만 실행하려면 `uvx` 를 씁니다(공개 후 사용 가능. 같은 방식을 소스 폴더에서 `uvx --from . n8n-tidy --version` 으로 실행해 `n8n-tidy 0.2.0` 을 확인했습니다).
 ```bash
 uvx --from git+https://github.com/LeeGyeongPil/n8n-tidy n8n-tidy diff A.json B.json
 ```
@@ -85,19 +85,19 @@ n8n-tidy diff: examples/export-before.json -> examples/export-after.json
 
 ### 시나리오 1 — 커밋 전에 검사하기
 ```bash
-n8n-tidy check examples/export-after.json
+n8n-tidy --lang ko check examples/export-after.json
 ```
 ```
 examples/export-after.json: - > -: not-normalized (run `n8n-tidy normalize`)
 examples/export-after.json: Ticket Webhook > pinData.Ticket Webhook: pin-data (pinned test data may contain real personal data)
 examples/export-after.json: - > shared: instance-info (owner/project of the source instance)
 examples/export-after.json: - > meta.instanceId: instance-info (id of the source instance)
-4 problem(s) found.
+문제 4건을 찾았습니다.
 ```
-문제가 있으면 종료 코드 1 입니다. `n8n-tidy normalize examples/export-after.json` 을 실행한 뒤 다시 검사하면 `ok: no problems found.` 가 나옵니다.
+(`--lang ko` 를 붙였습니다. `ko_KR` 로캘에서는 붙이지 않아도 같습니다.) 문제가 있으면 종료 코드 1 입니다. `n8n-tidy normalize examples/export-after.json` 을 실행한 뒤 다시 검사하면 `ok: no problems found.` 가 나옵니다.
 
-![check 실행 화면](docs/images/03-check.png)
-*네 가지 문제와 종료 코드 1.*
+![check 실행 화면 (--lang ko)](docs/images/03-check.ko.png)
+*`--lang ko` 로 실행한 check. 네 가지 문제와 종료 코드 1이며, 요약 줄만 한국어이고 문제 줄은 영어 그대로입니다.*
 
 `secret-suspect`(토큰처럼 보이는 문자열) 검사는 정규식으로 짐작하는 방식이라 전문 비밀 스캐너를 대신하지 못합니다. `=` 로 시작하는 표현식 값은 닫힌 `{{ ... }}` 구간을 뺀 나머지를 검사하고, 닫히지 않은 `{{` 는 그대로 검사합니다. 같은 토큰이 여러 패턴에 걸려도 한 번만 보고합니다(`Bearer sk-...` 같은 값도 1건).
 
@@ -133,7 +133,7 @@ n8n-tidy diff --format md examples/export-before.json examples/export-after.json
 ```yaml
 repos:
   - repo: https://github.com/LeeGyeongPil/n8n-tidy
-    rev: v0.1.3
+    rev: v0.2.0
     hooks:
       - id: n8n-tidy-check
 ```
@@ -180,7 +180,40 @@ jobs:
 UTF-8 이 아닌 `.json` 파일은 오류 없이 건너뛰고 `skipped` 로 알려 줍니다.
 
 ## 설정
-설정 파일과 환경 변수는 없습니다. 기본 동작은 위 "정규화 규칙" 표를 보세요.
+설정 파일은 없습니다. 기본 동작은 위 "정규화 규칙" 표를 보세요. 바꿀 수 있는 설정은 출력 언어 하나입니다.
+
+### 출력 언어 (영어 / 한국어)
+CLI 가 직접 내는 문구는 영어와 한국어를 지원합니다. 언어는 아래 순서로 정해지며, 먼저 설정된 것이 이깁니다.
+
+1. `--lang en|ko` (하위 명령 앞뒤 어디든, 예: `n8n-tidy --lang ko check backups/`)
+2. 환경 변수 `N8N_TIDY_LANG`
+3. `LC_ALL`, 그다음 `LC_MESSAGES`, 그다음 `LANG`
+
+값이 `ko` 로 시작하지 않으면(예: `fr_FR.UTF-8`, 또는 아무것도 없음) 영어입니다. 그래서 `ko_KR.UTF-8` 로캘에서는 기본이 한국어입니다. 문구를 비교하는 스크립트는 `N8N_TIDY_LANG=en` 또는 `--lang en` 으로 언어를 고정하세요. 잘못된 `--lang` 값은 종료 코드 2 로 끝납니다.
+
+```bash
+n8n-tidy --lang ko check examples/export-after.json
+```
+```
+examples/export-after.json: - > -: not-normalized (run `n8n-tidy normalize`)
+examples/export-after.json: Ticket Webhook > pinData.Ticket Webhook: pin-data (pinned test data may contain real personal data)
+examples/export-after.json: - > shared: instance-info (owner/project of the source instance)
+examples/export-after.json: - > meta.instanceId: instance-info (id of the source instance)
+문제 4건을 찾았습니다.
+```
+마지막 줄만 한국어입니다. 문제 줄은 영어 그대로 나옵니다(아래 참고).
+
+번역되는 것: `-h` 도움말(설명·하위 명령·옵션 도움말), `skipped`, `normalized`, `needs normalizing`, `check` 요약 줄(`N problem(s) found.` / `ok: no problems found.`), `nothing to remove`, `install-git` 의 `(dry run)` 표시, `n8n-tidy: error:` 뒤의 오류 메시지(라이브러리가 낸 오류 포함).
+
+**두 언어 모두 영어 그대로 출력되는 것:**
+- argparse 가 직접 만드는 문구: `usage:`, `positional arguments:`·`options:` 절 제목, `n8n-tidy: error:` 접두어, `-h` 옵션 줄, `--version` 도움말, `invalid choice` 오류, 그리고 metavar(`PATH`·`REV`·`KIND`·`COMMAND`)
+- `diff` 출력: `text`·`md` 본문과 `--format json` 출력(JSON 은 두 언어에서 바이트까지 같습니다)
+- `show` / `textconv` 검토용 보기
+- `check` 의 문제 줄(`pin-data`·`not-normalized` 같은 규칙 ID 는 바뀌지 않습니다)
+- `install-git` / `uninstall-git` 이 출력하는 git 설정 줄
+- 워크플로 JSON 자체
+
+라이브러리 API(`normalize`·`semantic_diff`·`render_*` 등)는 그대로이고, 라이브러리 오류의 `str(exc)` 도 영어입니다.
 
 ### 목 모드와 실제 모드
 - **연습용 목(mock) 모드**: 따로 켜는 모드는 아닙니다. 이 도구는 파일만 읽으므로 항상 같은 방식으로 동작하고, 예제 JSON(`examples/`)은 직접 만든 가짜 값입니다. 위의 모든 명령이 이 방식입니다.
@@ -244,7 +277,7 @@ flowchart LR
 ```bash
 uv run pytest -q
 ```
-테스트 60개가 n8n·docker·네트워크 없이 돕니다. 버그·제안은 이슈로 남겨 주세요. 변경 기록은 [CHANGELOG.md](CHANGELOG.md).
+테스트 84개가 n8n·docker·네트워크 없이 돕니다. 버그·제안은 이슈로 남겨 주세요. 변경 기록은 [CHANGELOG.md](CHANGELOG.md).
 
 ## 라이선스
 MIT. n8n 은 별도 라이선스(Sustainable Use License)이며 이 도구는 n8n 코드를 쓰지 않고 내보낸 JSON 만 다룹니다. 예제 JSON 은 직접 작성했습니다.

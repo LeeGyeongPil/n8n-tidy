@@ -5,6 +5,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-12
+
+### Added
+- English and Korean output. Pick the language with `--lang en|ko` (before or after the sub-command), the `N8N_TIDY_LANG` environment variable, or `LC_ALL` / `LC_MESSAGES` / `LANG` (in that order). Anything that does not start with `ko` means English.
+- The CLI's own wording is translated: help text, `skipped`, `normalized`, `needs normalizing`, the `check` summary line, `nothing to remove` and error messages (including errors raised by the library).
+- `TidyError` (and its subclasses) accept optional `code` and `params` keyword arguments used for translation. `str(exc)` is unchanged and still English.
+
+### Changed
+- With a Korean locale (`LANG=ko_KR.UTF-8`) the default output language is now Korean. Scripts that compare message text should set `N8N_TIDY_LANG=en` or pass `--lang en`.
+- Not translated and unchanged: `diff --format json` output, rule IDs (`pin-data`, `not-normalized`, ...), exit codes, `diff` text/md bodies, `show`/`textconv` review views, `check` problem lines, git configuration lines printed by `install-git`, argparse's own wording (`usage:`, `-h` text, `invalid choice` errors) and metavars.
+
 ## [0.1.3] - 2026-11-11
 
 ### Fixed
