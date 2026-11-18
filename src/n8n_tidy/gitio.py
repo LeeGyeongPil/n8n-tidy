@@ -45,10 +45,12 @@ def show_revision(rev: str, path: str | Path) -> str:
     p = Path(path).resolve()
     proc = _git(["show", f"{rev}:./{p.name}"], p.parent, check=False)
     if proc.returncode != 0:
+        # git's stderr usually ends with '.', and the templates add their own.
+        detail = proc.stderr.strip().rstrip(".")
         raise GitError(
-            f"cannot read {path} at {rev}: {proc.stderr.strip()}. "
+            f"cannot read {path} at {rev}: {detail}. "
             "Check that the revision exists and the file is tracked there.",
-            code="cannot_read_rev", params={"path": str(path), "rev": rev, "detail": proc.stderr.strip()},
+            code="cannot_read_rev", params={"path": str(path), "rev": rev, "detail": detail},
         )
     return proc.stdout
 

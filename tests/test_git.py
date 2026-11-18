@@ -66,3 +66,13 @@ def test_diff_against_revision(isolated_git, capsys):
     assert main(["diff", "--rev", "no-such-rev", "wf.json"]) == 2
     assert "cannot read" in capsys.readouterr().err
     assert main(["diff", "--rev=--oops", "wf.json"]) == 2
+
+
+def test_rev_error_has_single_period(isolated_git, capsys, monkeypatch):
+    repo, _ = isolated_git  # no commits yet, so HEAD does not exist
+    copy_fixture("export-v1.json", repo / "wf.json")
+    for lang, tail in (("en", "'HEAD'. Check that"), ("ko", "'HEAD'. 리비전이")):
+        monkeypatch.setenv("N8N_TIDY_LANG", lang)
+        assert main(["diff", "--rev", "HEAD", "wf.json"]) == 2
+        err = capsys.readouterr().err
+        assert tail in err and ".." not in err
