@@ -5,6 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-18
+
+### Fixed
+- `diff --rev` no longer prints a doubled period at the end of the error message when git reports an unknown revision.
+
 ## [0.2.0] - 2026-11-12
 
 ### Added

@@ -26,12 +26,12 @@ uv tool install git+https://github.com/LeeGyeongPil/n8n-tidy
 n8n-tidy --version
 ```
 ```
-n8n-tidy 0.2.0
+n8n-tidy 0.2.1
 ```
 To try it straight from source, run `git clone` and then `uv run n8n-tidy ...` inside the folder. (It has not been uploaded to PyPI yet.)
 
 ## Quick start
-To run it once without installing, use `uvx` (available after the repository goes public. We ran the same approach from the source folder as `uvx --from . n8n-tidy --version` and confirmed `n8n-tidy 0.2.0`).
+To run it once without installing, use `uvx` (available after the repository goes public. We ran the same approach from the source folder as `uvx --from . n8n-tidy --version` and confirmed `n8n-tidy 0.2.1`).
 ```bash
 uvx --from git+https://github.com/LeeGyeongPil/n8n-tidy n8n-tidy diff A.json B.json
 ```
@@ -133,7 +133,7 @@ Add this to `.pre-commit-config.yaml` (we have not yet run this setting ourselve
 ```yaml
 repos:
   - repo: https://github.com/LeeGyeongPil/n8n-tidy
-    rev: v0.2.0
+    rev: v0.2.1
     hooks:
       - id: n8n-tidy-check
 ```
