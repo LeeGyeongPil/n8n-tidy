@@ -76,6 +76,7 @@ Here is how the same two files look with a plain `git diff`.
 | `diff PATH --rev REV` | Compares the file at a git revision with the working folder | `n8n-tidy diff flow.json --rev HEAD~1` |
 | `diff --format text\|md\|json` | Output format (`md` is for PR comments) | `--format md` |
 | `diff --exit-code` / `--no-layout` / `--color auto|always|never` | Exit code 1 on changes / hide position changes / whether to use color (value required) | |
+| `diff --show-secrets` | `diff` masks token-like values (`ghp_****`, `xoxb****`, same patterns as `check`) by default in text, md and json output; this prints them as they are | |
 | `show FILE` | A review view as per-node blocks | `n8n-tidy show flow.json` |
 | `check PATH...` | Checks for `pinData`, not normalized, instance information, and token-suspect strings | `n8n-tidy check backups/` |
 | `check --allow KIND` | Ignore that kind (repeatable) | `--allow instance-info` |
@@ -277,7 +278,7 @@ If you only need normalization, n8nc's `fmt` is also enough. If you want to sync
 ```bash
 uv run pytest -q
 ```
-The 84 tests run without n8n, docker, or the network. Please leave bugs and suggestions as issues. The change log is [CHANGELOG.md](CHANGELOG.md).
+The 89 tests run without n8n, docker, or the network. Please leave bugs and suggestions as issues. The change log is [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 MIT. n8n has a separate license (Sustainable Use License), and this tool does not use n8n code; it only handles exported JSON. The example JSON was written by hand.

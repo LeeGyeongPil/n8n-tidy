@@ -3,7 +3,13 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.3.0] - 2026-11-26
+
+### Changed
+- `diff` now masks token-like values (`ghp_****`, `xoxb****`, same patterns as `check`) by default in text, md and json output, including values inside nested parameters and prompt diff lines. Scripts that read `diff --format json` values now get the masked form; pass `--show-secrets` to print the original values. Output without token-like values is unchanged.
+
+### Added
+- `diff --show-secrets` (help text in English and Korean).
 
 ## [0.2.1] - 2026-11-18
 

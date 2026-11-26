@@ -76,6 +76,7 @@ n8n-tidy diff: examples/export-before.json -> examples/export-after.json
 | `diff PATH --rev REV` | git 리비전의 파일과 작업 폴더 비교 | `n8n-tidy diff flow.json --rev HEAD~1` |
 | `diff --format text\|md\|json` | 출력 형식(`md` 는 PR 코멘트용) | `--format md` |
 | `diff --exit-code` / `--no-layout` / `--color auto|always|never` | 변경 시 종료 코드 1 / 위치 변경 숨김 / 색 사용 여부(값 필수) | |
+| `diff --show-secrets` | `diff` 는 text·md·json 출력에서 토큰으로 보이는 값(`ghp_****`, `xoxb****`, `check` 와 같은 패턴)을 기본으로 가립니다. 이 옵션을 주면 원문 그대로 출력합니다 | |
 | `show FILE` | 노드별 블록으로 보는 검토용 보기 | `n8n-tidy show flow.json` |
 | `check PATH...` | `pinData`, 정리 안 됨, 인스턴스 정보, 토큰 의심 문자열 검사 | `n8n-tidy check backups/` |
 | `check --allow KIND` | 해당 종류를 무시(반복 가능) | `--allow instance-info` |
@@ -277,7 +278,7 @@ flowchart LR
 ```bash
 uv run pytest -q
 ```
-테스트 84개가 n8n·docker·네트워크 없이 돕니다. 버그·제안은 이슈로 남겨 주세요. 변경 기록은 [CHANGELOG.md](CHANGELOG.md).
+테스트 89개가 n8n·docker·네트워크 없이 돕니다. 버그·제안은 이슈로 남겨 주세요. 변경 기록은 [CHANGELOG.md](CHANGELOG.md).
 
 ## 라이선스
 MIT. n8n 은 별도 라이선스(Sustainable Use License)이며 이 도구는 n8n 코드를 쓰지 않고 내보낸 JSON 만 다룹니다. 예제 JSON 은 직접 작성했습니다.
