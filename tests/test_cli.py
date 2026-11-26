@@ -151,3 +151,68 @@ def test_check_keep_static_data_empty_static_data_still_flagged(tmp_path, capsys
     path = _static_file(tmp_path, {})
     assert main(["check", "--keep-static-data", str(path), "--allow", "pin-data"]) == 1
     assert "not-normalized" in capsys.readouterr().out
+
+
+# --- diff masks token-like values by default (--show-secrets prints them as they are) ---
+
+GHP = "ghp_abcdefghijklmnopqrstuvwxyz0123456789"
+XOXB = "xoxb-123456789012-abcdefghijkl"
+
+
+def _secret_pair(tmp_path):
+    def wf(system, key):
+        params = {"options": {"systemMessage": system}}
+        if key:
+            params["apiKey"] = key
+        return {"name": "W", "id": "w1", "nodes": [
+            {"id": "n1", "name": "Agent", "type": "x.agent", "typeVersion": 1,
+             "position": [0, 0], "parameters": params}], "connections": {}}
+    a, b = tmp_path / "a.json", tmp_path / "b.json"
+    a.write_text(json.dumps(wf("Be nice.", None)))
+    b.write_text(json.dumps(wf(f"Be nice.\nUse key {GHP}", XOXB)))
+    return str(a), str(b)
+
+
+def test_diff_masks_secrets_in_all_formats(tmp_path, capsys):
+    a, b = _secret_pair(tmp_path)
+    for fmt in ("text", "md", "json"):
+        main(["diff", a, b, "--format", fmt, "--color", "never"])
+        out = capsys.readouterr().out
+        assert GHP not in out and XOXB not in out, fmt
+        assert "ghp_****" in out and "xoxb****" in out, fmt
+    main(["diff", a, b, "--color", "never"])
+    out = capsys.readouterr().out
+    assert "+Use key ghp_****" in out
+    assert 'parameters.apiKey: null -> "xoxb****"' in out
+    main(["diff", a, b, "--format", "json"])
+    data = json.loads(capsys.readouterr().out)
+    assert any(c["after"] == "xoxb****" for c in data["changes"])
+
+
+def test_diff_show_secrets_prints_original(tmp_path, capsys):
+    a, b = _secret_pair(tmp_path)
+    for fmt in ("text", "md", "json"):
+        main(["diff", a, b, "--format", fmt, "--show-secrets"])
+        out = capsys.readouterr().out
+        assert GHP in out and XOXB in out, fmt
+
+
+def test_diff_without_tokens_unchanged(capsys):
+    a, b = str(FIXTURES / "export-v1.json"), str(FIXTURES / "export-v2.json")
+    from n8n_tidy.diff import diff_documents
+    from n8n_tidy.io import load
+    from n8n_tidy.render import redact_changes, render_json, render_md, render_text
+    changes = diff_documents(load(a)[0], load(b)[0])
+    red = redact_changes(changes)
+    assert red == changes
+    assert render_text(red, [], "A", "B") == render_text(changes, [], "A", "B")
+    assert render_md(red, [], "A", "B") == render_md(changes, [], "A", "B")
+    assert render_json(red, [], "A", "B") == render_json(changes, [], "A", "B")
+
+
+def test_redact_text_follows_check_rules():
+    from n8n_tidy.check import redact_text, redact_value
+    assert redact_text(f"Authorization: Bearer {'a' * 24}") == "Authorization: Bearer aaaa****"
+    assert redact_text("={{ $json.k }}"[1:], expression=True) == "{{ $json.k }}"
+    assert redact_text(f"{{{{ {GHP} }}}} {GHP}", expression=True) == f"{{{{ {GHP} }}}} ghp_****"
+    assert redact_value({"k": [f"={{{{ {GHP} }}}}", GHP, 3]}) == {"k": [f"={{{{ {GHP} }}}}", "ghp_****", 3]}
