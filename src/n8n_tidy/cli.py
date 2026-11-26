@@ -13,7 +13,7 @@ from .diff import diff_documents
 from .i18n import LANGS, MESSAGES, resolve_lang, t
 from .io import InvalidJSONError, NotAWorkflowError, TidyError, iter_json_files, load, parse, write_text
 from .normalize import dumps, normalize
-from .render import pin_data_warnings, render_json, render_md, render_text, review_view
+from .render import pin_data_warnings, redact_changes, render_json, render_md, render_text, review_view
 
 SUBCOMMANDS = ("normalize", "diff", "show", "textconv", "check", "install-git", "uninstall-git")
 
@@ -60,6 +60,7 @@ def build_parser(lang: str = "en") -> argparse.ArgumentParser:
     d.add_argument("--format", choices=("text", "md", "json"), default="text")
     d.add_argument("--no-layout", action="store_true", help=m("help.diff.no_layout"))
     d.add_argument("--exit-code", action="store_true", help=m("help.diff.exit_code"))
+    d.add_argument("--show-secrets", action="store_true", help=m("help.diff.show_secrets"))
     d.add_argument("--color", choices=("auto", "always", "never"), default="auto")
 
     s = sub.add_parser("show", help=m("help.show"), parents=[lang_opt])
@@ -170,6 +171,8 @@ def _cmd_diff(args: argparse.Namespace) -> int:
     changes = diff_documents(a_docs, b_docs)
     if args.no_layout:
         changes = [c for c in changes if c.kind != "layout"]
+    if not args.show_secrets:  # mask token-like values by default, like `check` does
+        changes = redact_changes(changes)
     warnings = pin_data_warnings(a_docs, b_docs)
     multi = a_array or b_array
     if args.format == "json":

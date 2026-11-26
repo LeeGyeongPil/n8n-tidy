@@ -6,16 +6,34 @@ import dataclasses
 import json
 from typing import Any
 
+from .check import redact_text, redact_value
 from .diff import Change, _edges, edge_text
 from .normalize import normalize
 
-__all__ = ["render_text", "render_md", "render_json", "review_view", "describe", "pin_data_warnings"]
+__all__ = ["render_text", "render_md", "render_json", "review_view", "describe", "pin_data_warnings", "redact_changes"]
 
 _GREEN, _RED, _CYAN, _RESET = "\033[32m", "\033[31m", "\033[36m", "\033[0m"
 
 
 def _fmt(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False)
+
+
+# Kinds whose before/after are node names, types or connection text, not parameter values.
+_NO_REDACT_KINDS = frozenset({"rename", "added", "removed", "type", "edge", "workflow"})
+
+
+def redact_changes(changes: list[Change]) -> list[Change]:
+    """Copies of ``changes`` with token-like values masked (paths, node names and keys stay as they are)."""
+    out = []
+    for c in changes:
+        if c.kind in _NO_REDACT_KINDS:
+            out.append(c)
+            continue
+        out.append(dataclasses.replace(
+            c, before=redact_value(c.before), after=redact_value(c.after),
+            text_diff=redact_text(c.text_diff) if c.text_diff else c.text_diff))
+    return out
 
 
 def pin_data_warnings(a_docs: list[dict], b_docs: list[dict]) -> list[str]:

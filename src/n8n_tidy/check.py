@@ -9,7 +9,7 @@ from typing import Any, Iterable
 from .io import parse
 from .normalize import dumps, normalize
 
-__all__ = ["KINDS", "Problem", "check_text", "mask"]
+__all__ = ["KINDS", "Problem", "check_text", "mask", "redact_text", "redact_value"]
 
 KINDS = ("not-normalized", "pin-data", "instance-info", "secret-suspect")
 
@@ -63,9 +63,8 @@ def _strip_expression_refs(text: str) -> str:
     return _EXPRESSION_REF.sub(" ", text)
 
 
-def _find_secrets(text: str) -> list[str]:
-    """Return masked tokens; a span already reported by an earlier pattern is not reported again."""
-    found = []
+def _secret_spans(text: str) -> list[tuple[int, int]]:
+    """Spans of token-like strings; a span already reported by an earlier pattern is not reported again."""
     seen: list[tuple[int, int]] = []
     for pattern in _SECRET_PATTERNS:
         group = 1 if pattern.groups else 0
@@ -74,8 +73,52 @@ def _find_secrets(text: str) -> list[str]:
             if any(start < e and s < end for s, e in seen):
                 continue
             seen.append((start, end))
-            found.append(mask(m.group(group)))
-    return found
+    return seen
+
+
+def _find_secrets(text: str) -> list[str]:
+    """Return masked tokens."""
+    return [mask(text[s:e]) for s, e in _secret_spans(text)]
+
+
+def _redact_plain(text: str) -> str:
+    out, pos = [], 0
+    for start, end in sorted(_secret_spans(text)):
+        out.append(text[pos:start])
+        out.append(mask(text[start:end]))
+        pos = end
+    out.append(text[pos:])
+    return "".join(out)
+
+
+def redact_text(text: str, *, expression: bool = False) -> str:
+    """Replace token-like spans with their masked form (same patterns and masking as ``check``).
+
+    With ``expression=True`` the text is an n8n expression body: closed ``{{ ... }}`` spans are left alone,
+    exactly as ``check`` ignores them.
+    """
+    if not expression:
+        return _redact_plain(text)
+    out, pos = [], 0
+    for m in _EXPRESSION_REF.finditer(text):
+        out.append(_redact_plain(text[pos:m.start()]))
+        out.append(m.group(0))
+        pos = m.end()
+    out.append(_redact_plain(text[pos:]))
+    return "".join(out)
+
+
+def redact_value(value: Any) -> Any:
+    """Redact every string inside a JSON-like value; keys are left untouched."""
+    if isinstance(value, str):
+        if value.startswith("="):
+            return "=" + redact_text(value[1:], expression=True)
+        return redact_text(value)
+    if isinstance(value, dict):
+        return {k: redact_value(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [redact_value(v) for v in value]
+    return value
 
 
 def check_text(text: str, source: str, allow: Iterable[str] = (), *,
